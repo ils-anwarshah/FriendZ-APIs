@@ -1,4 +1,5 @@
 const randomstring = require("randomstring");
+const jsonWebToken = require("jsonwebtoken");
 const { responseMessageSuccess } = require("../utility/responseMessage");
 const { sendOTPEmail } = require("../config/mailer");
 
@@ -50,17 +51,30 @@ const authLoginController = async (req, res) => {
 
 const authVerifyOTPController = (req, res) => {
   const { otp, mobile_number } = req.body;
-  console.log(req.body);
+  // console.log(req.body);
   req.db
     .query("SELECT * FROM otp WHERE mobile_number=? AND otp=?", [
       mobile_number,
       otp,
     ])
-    .then((result) => {
+    .then(async (result) => {
       if (result[0].length > 0) {
+        const token = jsonWebToken.sign(result[0][0], process.env.SECRET_KEY, {
+          expiresIn: "7d",
+        });
+        await req.db.query(
+          "UPDATE otp SET access_token = ? WHERE mobile_number=? ORDER BY id DESC LIMIT 1",
+          [token, mobile_number]
+        );
         res
           .status(200)
-          .json(responseMessageSuccess(result[0][0], 200, "success"));
+          .json(
+            responseMessageSuccess(
+              { ...result[0][0], access_token: token },
+              200,
+              "success"
+            )
+          );
       } else {
         res.status(400).json(responseMessageSuccess({}, 400, "invalid OTP!"));
       }
