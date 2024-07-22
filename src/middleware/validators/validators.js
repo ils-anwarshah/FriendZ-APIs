@@ -8,6 +8,7 @@ const registerSchemaValidator = (req, res, next) => {
     fname: joi.string().required(),
     lname: joi.string().required(),
     dob: joi.string().required(),
+    gender:joi.string().valid('M','F','O').required()
   });
 
   const ValidateValues = userSchema.validate(req.body);

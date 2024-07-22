@@ -18,14 +18,14 @@ const authLoginController = async (req, res) => {
     .query("SELECT * FROM Users WHERE mobile_number=?", [mobile_number])
     .then(async (result) => {
       await req.db.query(
-        "CREATE TABLE IF NOT EXISTS otp (id INT NOT NULL AUTO_INCREMENT,user_id INT,mobile_number VARCHAR(12),email VARCHAR(40),name VARCHAR(80),otp VARCHAR(10), FOREIGN KEY (user_id) REFERENCES Users(user_id), PRIMARY KEY (id))"
+        "CREATE TABLE IF NOT EXISTS otp (id INT NOT NULL AUTO_INCREMENT,user_id INT,mobile_number VARCHAR(12),gender VARCHAR (2),email VARCHAR(40),name VARCHAR(80),otp VARCHAR(10),access_token VARCHAR(1024), FOREIGN KEY (user_id) REFERENCES Users(user_id), PRIMARY KEY (id))"
       );
       if (result[0].length > 0) {
-        const { user_id, email, mobile_number, fname, lname } = result[0][0];
+        const { user_id, email, mobile_number, fname, lname,gender } = result[0][0];
         req.db
           .query(
-            "INSERT INTO otp(user_id,mobile_number,email,name,otp) VALUES (?,?,?,?,?)",
-            [user_id, mobile_number, email, `${fname} ${lname}`, randomOTP]
+            "INSERT INTO otp(user_id,mobile_number,email,name,gender,otp) VALUES (?,?,?,?,?,?)",
+            [user_id, mobile_number, email, `${fname} ${lname}`,gender, randomOTP]
           )
           .then((result) => {
             // console.log("_____________________________", result[0].affectedRows);
@@ -85,11 +85,11 @@ const authVerifyOTPController = (req, res) => {
 };
 
 const authRegisterController = async (req, res) => {
-  const { fname, lname, dob, email, mobile_number } = req.body;
+  const { fname, lname, dob, email, mobile_number,gender } = req.body;
   req.db
     .query(
-      `INSERT INTO Users(fname,lname,dob,email,mobile_number) VALUES (?,?,?,?,?)`,
-      [fname, lname, dob, email, mobile_number]
+      `INSERT INTO Users(fname,lname,dob,email,mobile_number,gender) VALUES (?,?,?,?,?,?)`,
+      [fname, lname, dob, email, mobile_number,gender]
     )
     .then((result) => {
       // console.log("RES", result);

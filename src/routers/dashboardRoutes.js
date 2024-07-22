@@ -10,6 +10,7 @@ const {
   getStatusDataController,
   postStatusDataController,
   getUserPostDataController,
+  createUserPostController,
 } = require("../controller/dashboardControllers");
 const authorization = require("../middleware/validators/authorization");
 
@@ -18,6 +19,6 @@ dashboardRouter.use(authorization);
 dashboardRouter.get("/getStatus", getStatusDataController);
 dashboardRouter.post("/postStatus", postStatusDataController);
 dashboardRouter.get("/getUserPostData", getUserPostDataController);
-// dashboardRouter.post("/getSearchPostData", authVerifyOTPController);
+dashboardRouter.post("/createUserPost", createUserPostController);
 
 module.exports = dashboardRouter;
