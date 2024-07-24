@@ -74,7 +74,7 @@ const createUserPostController = async (req, res) => {
       [
         tokenData?.user_id,
         post_title,
-        publish_time,
+        new Date().toUTCString(),
         tokenData?.name,
         post_type_id,
         posted_from,
@@ -83,10 +83,160 @@ const createUserPostController = async (req, res) => {
       ]
     )
     .then((result) => {
-      res.status(200).json(responseMessageSuccess({}, 200, "Post Added Successfully!"));
+      res
+        .status(200)
+        .json(responseMessageSuccess({}, 200, "Post Added Successfully!"));
     })
     .catch((err) => {
       res.json({ err });
+    });
+};
+const getUserTypes = async (req, res) => {
+  req.db.query(
+    `CREATE TABLE IF NOT EXISTS user_types ( id INT(40) NOT NULL AUTO_INCREMENT, title VARCHAR(40), image VARCHAR(1024), PRIMARY KEY (id))`
+  );
+  req.db
+    .query("SELECT * FROM user_types ORDER BY id DESC")
+    .then((result) => {
+      res.status(200).json(responseMessageSuccess(result[0], 200, "Success"));
+    })
+    .catch((err) => {
+      res.json({ err });
+    });
+};
+const likePostController = async (req, res) => {
+  const { reaction, post_id } = req.body;
+  req.db.query(
+    `CREATE TABLE IF NOT EXISTS user_post_reaction (id INT AUTO_INCREMENT PRIMARY KEY,post_id INT NOT NULL,user_id INT NOT NULL,reaction TINYINT NOT NULL,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,UNIQUE KEY unique_post_user (post_id, user_id),FOREIGN KEY (post_id) REFERENCES user_posts(id),FOREIGN KEY (user_id) REFERENCES Users(user_id))`
+  );
+  req.db
+    .query(
+      "INSERT INTO user_post_reaction(post_id,user_id,reaction) VALUES (?,?,?) ON DUPLICATE KEY UPDATE reaction = ?",
+      [post_id, req.tokenData.user_id, reaction, reaction]
+    )
+    .then((result) => {
+      res
+        .status(200)
+        .json(responseMessageSuccess({}, 200, "Like Added Successfully"));
+    })
+    .catch((err) => {
+      res.status(400).json({ err });
+    });
+};
+const getLikeAndConnectionCountConroller = async (req, res) => {
+  // const { reaction, post_id } = req.query;
+  try {
+    const like_counts = await req.db.query(
+      "SELECT COUNT(reaction) as like_count FROM user_post_reaction WHERE user_id = ? AND reaction = 1",
+      [req.tokenData.user_id]
+    );
+    const connection_counts = await req.db.query(
+      "SELECT COUNT(follower_id) as connection_count FROM user_connections WHERE follower_id = ?",
+      [req.tokenData.user_id]
+    );
+    res.status(200).json(
+      responseMessageSuccess(
+        {
+          ...like_counts[0][0],
+          ...connection_counts[0][0],
+        },
+        200,
+        "success"
+      )
+    );
+  } catch (err) {
+    res.status(500).json({ err });
+  }
+};
+const makeConnectionController = async (req, res) => {
+  // const { following_id } = req.query;
+  const following_id = parseInt(req.params.userId);
+  req.db.query(
+    "CREATE TABLE IF NOT EXISTS user_connections (id INT AUTO_INCREMENT PRIMARY KEY,follower_id INT NOT NULL,following_id INT NOT NULL,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,status VARCHAR(20),FOREIGN KEY (follower_id) REFERENCES Users(user_id),FOREIGN KEY (following_id) REFERENCES Users(user_id),UNIQUE KEY unique_connection (follower_id, following_id))"
+  );
+  if (req.tokenData.user_id === following_id) {
+    return res.status(400).json({ error: "Cannot follow yourself" });
+  }
+  req.db
+    .query(
+      "INSERT INTO user_connections(follower_id,following_id) VALUES(?,?)",
+      [req.tokenData.user_id, following_id]
+    )
+    .then((result) => {
+      res
+        .status(200)
+        .json(responseMessageSuccess({}, 200, "User followed successfully "));
+    })
+    .catch((err) => {
+      res.status(400).json({ err });
+    });
+};
+const getUserConnectionsController = async (req, res) => {
+  // const { following_id } = req.query;
+  // const following_id = parseInt(req.params.userId);
+  req.db
+    .query("SELECT * FROM user_connections WHERE follower_id= ?", [
+      req.tokenData.user_id,
+    ])
+    .then((result) => {
+      res.status(200).json(responseMessageSuccess(result[0], 200, "success"));
+    })
+    .catch((err) => {
+      res.status(400).json({ err });
+    });
+};
+const deleteUserConnectionController = async (req, res) => {
+  const following_id = parseInt(req.params.userId);
+  req.db
+    .query(
+      "DELETE * FROM user_connections WHERE follower_id=? AND following_id = ? ",
+      [req.tokenData.user_id, following_id]
+    )
+    .then((result) => {
+      res
+        .status(200)
+        .json(responseMessageSuccess({}, 200, "Unfollowed Successfully"));
+    })
+    .catch((err) => {
+      res.status(400).json({ err });
+    });
+};
+const getMatchedUsersListController = async (req, res) => {
+  const { gender } = req.body;
+  // console.log(req.tokenData);
+  req.db
+    .query("SELECT * FROM Users WHERE gender= ?", [gender])
+    .then((result) => {
+      res.status(200).json(responseMessageSuccess(result[0], 200, "success"));
+    })
+    .catch((err) => {
+      res.status(400).json({ err });
+    });
+};
+const getNewUsersListController = async (req, res) => {
+  // const { gender } = req.body;
+  // console.log(req.tokenData);
+  req.db
+    .query("SELECT * FROM Users ORDER BY user_id DESC LIMIT 10")
+    .then((result) => {
+      res.status(200).json(responseMessageSuccess(result[0], 200, "success"));
+    })
+    .catch((err) => {
+      res.status(400).json({ err });
+    });
+};
+const getUserDetailsFromUserIdController = async (req, res) => {
+  const user_id = req.params.user_id;
+  // console.log(req.tokenData);
+  req.db
+    .query("SELECT * FROM Users WHERE user_id = ?", [user_id])
+    .then((result) => {
+      res
+        .status(200)
+        .json(responseMessageSuccess(result[0][0], 200, "success"));
+    })
+    .catch((err) => {
+      res.status(400).json({ err });
     });
 };
 
@@ -95,4 +245,13 @@ module.exports = {
   postStatusDataController,
   getUserPostDataController,
   createUserPostController,
+  getUserTypes,
+  likePostController,
+  getLikeAndConnectionCountConroller,
+  makeConnectionController,
+  getUserConnectionsController,
+  deleteUserConnectionController,
+  getMatchedUsersListController,
+  getNewUsersListController,
+  getUserDetailsFromUserIdController,
 };
