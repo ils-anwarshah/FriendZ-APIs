@@ -3,6 +3,7 @@ require("dotenv").config();
 const userRouter = require("./src/routers/userRouter");
 const dashboardRouters = require("./src/routers/dashboardRoutes");
 const db = require("./src/config/db");
+const messagesRoutes = require("./src/routers/messagesRoutes");
 const app = express();
 
 app.use((req, res, next) => {
@@ -15,6 +16,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/user", userRouter);
 app.use("/", dashboardRouters);
+app.use("/messages", messagesRoutes);
 
 app.listen(3000, (err) => {
   if (err) {

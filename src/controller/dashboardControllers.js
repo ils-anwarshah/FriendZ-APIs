@@ -105,14 +105,14 @@ const getUserTypes = async (req, res) => {
     });
 };
 const likePostController = async (req, res) => {
-  const { reaction, post_id } = req.body;
+  const { reaction, post_id, post_owner_id } = req.body;
   req.db.query(
-    `CREATE TABLE IF NOT EXISTS user_post_reaction (id INT AUTO_INCREMENT PRIMARY KEY,post_id INT NOT NULL,user_id INT NOT NULL,reaction TINYINT NOT NULL,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,UNIQUE KEY unique_post_user (post_id, user_id),FOREIGN KEY (post_id) REFERENCES user_posts(id),FOREIGN KEY (user_id) REFERENCES Users(user_id))`
+    `CREATE TABLE IF NOT EXISTS user_post_reaction (id INT AUTO_INCREMENT PRIMARY KEY,post_id INT NOT NULL,user_id INT NOT NULL, post_owner_id INT NOT NULL, reaction TINYINT NOT NULL,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,UNIQUE KEY unique_post_user (post_id, user_id),FOREIGN KEY (post_id) REFERENCES user_posts(id),FOREIGN KEY (user_id) REFERENCES Users(user_id))`
   );
   req.db
     .query(
-      "INSERT INTO user_post_reaction(post_id,user_id,reaction) VALUES (?,?,?) ON DUPLICATE KEY UPDATE reaction = ?",
-      [post_id, req.tokenData.user_id, reaction, reaction]
+      "INSERT INTO user_post_reaction(post_id,user_id,reaction,post_owner_id) VALUES (?,?,?,?) ON DUPLICATE KEY UPDATE reaction = ?",
+      [post_id, req.tokenData.user_id, reaction, post_owner_id, reaction]
     )
     .then((result) => {
       res
@@ -175,9 +175,10 @@ const getUserConnectionsController = async (req, res) => {
   // const { following_id } = req.query;
   // const following_id = parseInt(req.params.userId);
   req.db
-    .query("SELECT * FROM user_connections WHERE follower_id= ?", [
-      req.tokenData.user_id,
-    ])
+    .query(
+      "SELECT * FROM Users WHERE user_id IN (SELECT following_id FROM user_connections WHERE follower_id = ?)",
+      [req.tokenData.user_id]
+    )
     .then((result) => {
       res.status(200).json(responseMessageSuccess(result[0], 200, "success"));
     })
@@ -189,7 +190,7 @@ const deleteUserConnectionController = async (req, res) => {
   const following_id = parseInt(req.params.userId);
   req.db
     .query(
-      "DELETE * FROM user_connections WHERE follower_id=? AND following_id = ? ",
+      "DELETE FROM user_connections WHERE follower_id=? AND following_id = ? ",
       [req.tokenData.user_id, following_id]
     )
     .then((result) => {
@@ -239,6 +240,21 @@ const getUserDetailsFromUserIdController = async (req, res) => {
       res.status(400).json({ err });
     });
 };
+const getUserLikesAndListController = async (req, res) => {
+  // const user_id = req.params.user_id;
+  // console.log(req.tokenData);
+  req.db
+    .query(
+      "SELECT COUNT(user_post_reaction.id) AS like_count,Users.profile_img,Users.fname, Users.lname , user_post_reaction.user_id FROM user_post_reaction JOIN Users ON Users.user_id = user_post_reaction.user_id WHERE post_owner_id = ? GROUP BY user_id ORDER BY like_count DESC",
+      [req.tokenData.user_id]
+    )
+    .then((result) => {
+      res.status(200).json(responseMessageSuccess(result[0], 200, "success"));
+    })
+    .catch((err) => {
+      res.status(400).json({ err });
+    });
+};
 
 module.exports = {
   getStatusDataController,
@@ -254,4 +270,5 @@ module.exports = {
   getMatchedUsersListController,
   getNewUsersListController,
   getUserDetailsFromUserIdController,
+  getUserLikesAndListController,
 };

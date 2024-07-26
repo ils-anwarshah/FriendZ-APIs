@@ -1,12 +1,6 @@
 const express = require("express");
 const dashboardRouter = express.Router();
 const {
-  authLoginController,
-  authRegisterController,
-  authVerifyOTPController,
-} = require("../controller/authController");
-
-const {
   getStatusDataController,
   postStatusDataController,
   getUserPostDataController,
@@ -20,6 +14,7 @@ const {
   getMatchedUsersListController,
   getNewUsersListController,
   getUserDetailsFromUserIdController,
+  getUserLikesAndListController,
 } = require("../controller/dashboardControllers");
 const authorization = require("../middleware/validators/authorization");
 
@@ -47,5 +42,6 @@ dashboardRouter.get(
   "/getUserDetails/:user_id",
   getUserDetailsFromUserIdController
 );
+dashboardRouter.get("/getUserLikesAndList", getUserLikesAndListController);
 
 module.exports = dashboardRouter;
