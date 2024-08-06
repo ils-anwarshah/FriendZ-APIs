@@ -232,9 +232,13 @@ const getUserDetailsFromUserIdController = async (req, res) => {
   req.db
     .query("SELECT * FROM Users WHERE user_id = ?", [user_id])
     .then((result) => {
-      res
-        .status(200)
-        .json(responseMessageSuccess(result[0][0], 200, "success"));
+      if (result[0].length > 0) {
+        res
+          .status(200)
+          .json(responseMessageSuccess(result[0][0], 200, "success"));
+      } else {
+        res.status(400).json({ err: "user not found!" });
+      }
     })
     .catch((err) => {
       res.status(400).json({ err });

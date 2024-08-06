@@ -8,7 +8,8 @@ const registerSchemaValidator = (req, res, next) => {
     fname: joi.string().required(),
     lname: joi.string().required(),
     dob: joi.string().required(),
-    gender:joi.string().valid('M','F','O').required()
+    gender: joi.string().valid("M", "F", "O").required(),
+    profile_img: joi.string(),
   });
 
   const ValidateValues = userSchema.validate(req.body);
@@ -35,5 +36,26 @@ const loginSchemaValidator = (req, res, next) => {
     next();
   }
 };
+const sendMessageValidator = (req, res, next) => {
+  const userSchema = joi.object().keys({
+    receiver_id: joi.string().required(),
+    file: joi.string().allow(""),
+    message: joi.string().allow(""),
+    attachment: joi.string().allow(""),
+  });
 
-module.exports = { registerSchemaValidator, loginSchemaValidator };
+  const ValidateValues = userSchema.validate(req.body);
+  if (ValidateValues.error) {
+    let errorName = ValidateValues?.error?.name;
+    let errorMessage = ValidateValues?.error?.details[0].message;
+    responseMessageError(`${errorName} ${errorMessage}`, res);
+  } else {
+    next();
+  }
+};
+
+module.exports = {
+  registerSchemaValidator,
+  loginSchemaValidator,
+  sendMessageValidator,
+};
