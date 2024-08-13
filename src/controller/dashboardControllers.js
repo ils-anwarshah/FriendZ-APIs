@@ -216,9 +216,12 @@ const getMatchedUsersListController = async (req, res) => {
 };
 const getNewUsersListController = async (req, res) => {
   // const { gender } = req.body;
-  // console.log(req.tokenData);
+  console.log(req.tokenData);
   req.db
-    .query("SELECT * FROM Users ORDER BY user_id DESC LIMIT 10")
+    .query(
+      "SELECT * FROM Users WHERE user_id != ? ORDER BY user_id DESC LIMIT 10",
+      [req.tokenData.user_id]
+    )
     .then((result) => {
       res.status(200).json(responseMessageSuccess(result[0], 200, "success"));
     })
