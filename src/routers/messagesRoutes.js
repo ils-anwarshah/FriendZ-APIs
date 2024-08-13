@@ -21,7 +21,7 @@ messagesRoutes.get("/fetchMessages/:roomId", fetchMessagesController);
 messagesRoutes.post("/createUserConnection", createUserConnection);
 messagesRoutes.get("/fetchRecentMessageUserList", fetchRecentMessageUserList);
 messagesRoutes.put(
-  "/updateMessageStatus/:roomId",
+  "/updateMessageStatus/:roomId/:receiverId",
   updateMessageStatusController
 );
 

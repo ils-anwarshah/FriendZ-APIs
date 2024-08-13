@@ -3,7 +3,7 @@ const { responseMessageSuccess } = require("../utility/responseMessage");
 const sendMessagesController = async (req, res) => {
   const { receiver_id, file, message, attachment } = req.body;
   await req.db.query(
-    "CREATE TABLE IF NOT EXISTS user_messages (id INT AUTO_INCREMENT PRIMARY KEY,sender_id INT NOT NULL,receiver_id INT NOT NULL,time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,file TEXT,message TEXT,attachment TEXT,roomId VARCHAR(127),is_read INT DEFAULT 0,FOREIGN KEY (sender_id) REFERENCES Users(user_id),FOREIGN KEY (receiver_id) REFERENCES Users(user_id))"
+    "CREATE TABLE IF NOT EXISTS user_messages (id INT AUTO_INCREMENT PRIMARY KEY,sender_id INT NOT NULL,receiver_id INT NOT NULL,time VARCHAR(40),file TEXT,message TEXT,attachment TEXT,roomId VARCHAR(127),is_read INT DEFAULT 0,FOREIGN KEY (sender_id) REFERENCES Users(user_id),FOREIGN KEY (receiver_id) REFERENCES Users(user_id))"
   );
   const userIds = [req.tokenData.user_id, receiver_id];
   const sortedRoomArray = userIds.sort((a, b) => a - b);
@@ -11,7 +11,7 @@ const sendMessagesController = async (req, res) => {
   const sortedRoomID = `${id1}${id2}`;
   req.db
     .query(
-      "INSERT INTO user_messages (sender_id,receiver_id,file,message,attachment, roomId) VALUES (?,?,?,?,?,?)",
+      "INSERT INTO user_messages (sender_id,receiver_id,file,message,attachment, roomId,time) VALUES (?,?,?,?,?,?,?)",
       [
         req.tokenData.user_id,
         receiver_id,
@@ -19,6 +19,7 @@ const sendMessagesController = async (req, res) => {
         message,
         attachment,
         sortedRoomID,
+        new Date(),
       ]
     )
     .then((result) => {
@@ -32,9 +33,7 @@ const sendMessagesController = async (req, res) => {
 const fetchMessagesController = async (req, res) => {
   const { roomId } = req.params;
   req.db
-    .query("SELECT * FROM user_messages WHERE roomId = ?", [
-      roomId,
-    ])
+    .query("SELECT * FROM user_messages WHERE roomId = ?", [roomId])
     .then((result) => {
       res.status(200).json(responseMessageSuccess(result[0], 200, "success"));
     })
@@ -115,9 +114,12 @@ const fetchRecentMessageUserList = async (req, res) => {
 };
 
 const updateMessageStatusController = async (req, res) => {
-  const { roomId } = req.params;
+  const { roomId, receiverId } = req.params;
   req.db
-    .query("UPDATE user_messages SET is_read = 1 WHERE roomId = ? ", [roomId])
+    .query(
+      "UPDATE user_messages SET is_read = 1 WHERE roomId = ? AND receiver_id=?",
+      [roomId, receiverId]
+    )
     .then((result) => {
       res.status(200).json(responseMessageSuccess({}, 200, "success"));
     })
