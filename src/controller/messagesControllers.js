@@ -1,3 +1,4 @@
+const moment = require("moment");
 const { responseMessageSuccess } = require("../utility/responseMessage");
 
 const sendMessagesController = async (req, res) => {
@@ -19,7 +20,7 @@ const sendMessagesController = async (req, res) => {
         message,
         attachment,
         sortedRoomID,
-        new Date(),
+        moment().utc(),
       ]
     )
     .then((result) => {
