@@ -232,13 +232,24 @@ const getNewUsersListController = async (req, res) => {
 const getUserDetailsFromUserIdController = async (req, res) => {
   const user_id = req.params.user_id;
   // console.log(req.tokenData);
+  const checkIsFollwing = await req.db.query(
+    "SELECT * FROM user_connections WHERE follower_id = ? AND following_id=?",
+    [req.tokenData.user_id, parseInt(user_id)]
+  );
   req.db
     .query("SELECT * FROM Users WHERE user_id = ?", [user_id])
     .then((result) => {
       if (result[0].length > 0) {
-        res
-          .status(200)
-          .json(responseMessageSuccess(result[0][0], 200, "success"));
+        res.status(200).json(
+          responseMessageSuccess(
+            {
+              ...result[0][0],
+              isFollwing: checkIsFollwing[0].length ? true : false,
+            },
+            200,
+            "success"
+          )
+        );
       } else {
         res.status(400).json({ err: "user not found!" });
       }
