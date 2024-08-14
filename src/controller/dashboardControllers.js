@@ -68,7 +68,7 @@ const createUserPostController = async (req, res) => {
   const tokenData = jsonWebToken.decode(access_token);
   console.log(tokenData);
   req.db.query(
-    `CREATE TABLE IF NOT EXISTS user_posts ( id INT(40) NOT NULL AUTO_INCREMENT, user_id INT(40) NOT NULL , post_title VARCHAR(1024), publish_time VARCHAR(40), published_by VARCHAR(120), liked_by VARCHAR(1024), post_type VARCHAR(40) , post_type INT(12), comments VARCHAR(2048) , posted_from VARCHAR(40),user_profile TEXT, email VARCHAR(120),FOREIGN KEY (user_id) REFERENCES Users(user_id), PRIMARY KEY (id))`
+    `CREATE TABLE IF NOT EXISTS user_posts ( id INT(40) NOT NULL AUTO_INCREMENT, user_id INT(40) NOT NULL , post_title VARCHAR(1024), publish_time VARCHAR(40), published_by VARCHAR(120), liked_by VARCHAR(1024), post_type VARCHAR(40), comments VARCHAR(2048) , posted_from VARCHAR(40),user_profile TEXT, email VARCHAR(120),FOREIGN KEY (user_id) REFERENCES Users(user_id), PRIMARY KEY (id))`
   );
   req.db
     .query(
