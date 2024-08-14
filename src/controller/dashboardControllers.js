@@ -3,6 +3,7 @@ const {
   responseMessageSuccess,
   responseMessageError,
 } = require("../utility/responseMessage");
+const moment = require("moment");
 
 const getStatusDataController = async (req, res) => {
   //   const {} = req.query;
@@ -61,24 +62,25 @@ const getUserPostDataController = async (req, res) => {
     });
 };
 const createUserPostController = async (req, res) => {
-  const { post_title, publish_time, post_type_id, posted_from } = req.body;
+  const { post_title, publish_time, post_type, posted_from, user_profile } =
+    req.body;
   const access_token = req.headers.authorization;
   const tokenData = jsonWebToken.decode(access_token);
-  // console.log(tokenData);
+  console.log(tokenData);
   req.db.query(
-    `CREATE TABLE IF NOT EXISTS user_posts ( id INT(40) NOT NULL AUTO_INCREMENT, user_id INT(40) NOT NULL , post_title VARCHAR(1024), publish_time VARCHAR(40), published_by VARCHAR(120), liked_by VARCHAR(1024), post_type VARCHAR(40) , post_type_id INT(12), comments VARCHAR(2048) , posted_from VARCHAR(40),user_profile VARCHAR(1024), email VARCHAR(120),FOREIGN KEY (user_id) REFERENCES Users(user_id), PRIMARY KEY (id))`
+    `CREATE TABLE IF NOT EXISTS user_posts ( id INT(40) NOT NULL AUTO_INCREMENT, user_id INT(40) NOT NULL , post_title VARCHAR(1024), publish_time VARCHAR(40), published_by VARCHAR(120), liked_by VARCHAR(1024), post_type VARCHAR(40) , post_type INT(12), comments VARCHAR(2048) , posted_from VARCHAR(40),user_profile TEXT, email VARCHAR(120),FOREIGN KEY (user_id) REFERENCES Users(user_id), PRIMARY KEY (id))`
   );
   req.db
     .query(
-      "INSERT INTO user_posts (user_id, post_title, publish_time, published_by, post_type_id, posted_from, user_profile, email) VALUES (?,?,?,?,?,?,?,?)",
+      "INSERT INTO user_posts (user_id, post_title, publish_time, published_by, post_type, posted_from, user_profile, email) VALUES (?,?,?,?,?,?,?,?)",
       [
         tokenData?.user_id,
         post_title,
-        new Date().toUTCString(),
+        moment().utc().format("YYYY-MM-DD HH:mm:ss"),
         tokenData?.name,
-        post_type_id,
+        post_type,
         posted_from,
-        "",
+        user_profile,
         tokenData?.email,
       ]
     )
