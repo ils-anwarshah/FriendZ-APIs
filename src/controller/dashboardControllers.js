@@ -51,9 +51,10 @@ const getUserPostDataController = async (req, res) => {
   const access_token = req.headers.authorization;
   const tokenData = jsonWebToken.decode(access_token);
   req.db
-    .query("SELECT * FROM user_posts ORDER BY id DESC LIMIT ?", [
-      parseInt(limit),
-    ])
+    .query(
+      "SELECT up.id, up.user_id,up.post_title,up.publish_time,up.published_by,up.liked_by,up.post_type,up.comments,up.posted_from,up.user_profile,up.email,u.profile_img as profile_image FROM user_posts as up LEFT JOIN Users u ON u.user_id=up.user_id ORDER BY up.id DESC LIMIT ?",
+      [parseInt(limit)]
+    )
     .then((result) => {
       res.status(200).json(responseMessageSuccess(result[0], 200, "success"));
     })
@@ -66,7 +67,6 @@ const createUserPostController = async (req, res) => {
     req.body;
   const access_token = req.headers.authorization;
   const tokenData = jsonWebToken.decode(access_token);
-  console.log(tokenData);
   req.db.query(
     `CREATE TABLE IF NOT EXISTS user_posts ( id INT(40) NOT NULL AUTO_INCREMENT, user_id INT(40) NOT NULL , post_title VARCHAR(1024), publish_time VARCHAR(40), published_by VARCHAR(120), liked_by VARCHAR(1024), post_type VARCHAR(40), comments VARCHAR(2048) , posted_from VARCHAR(40),user_profile TEXT, email VARCHAR(120),FOREIGN KEY (user_id) REFERENCES Users(user_id), PRIMARY KEY (id))`
   );
