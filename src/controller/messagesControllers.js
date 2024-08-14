@@ -10,7 +10,7 @@ const sendMessagesController = async (req, res) => {
   const sortedRoomArray = userIds.sort((a, b) => a - b);
   const [id1, id2] = sortedRoomArray;
   const sortedRoomID = `${id1}${id2}`;
-  const currentTime = moment().utc().format("YYYY-MM-DD hh:mm:ss Z");
+  const currentTime = moment().utc().toDate() + "Z";
   req.db
     .query(
       "INSERT INTO user_messages (sender_id,receiver_id,file,message,attachment, roomId,time) VALUES (?,?,?,?,?,?,?)",
