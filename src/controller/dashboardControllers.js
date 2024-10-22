@@ -48,8 +48,6 @@ const postStatusDataController = async (req, res) => {
 };
 const getUserPostDataController = async (req, res) => {
   const { limit, page } = req.query;
-  const access_token = req.headers.authorization;
-  const tokenData = jsonWebToken.decode(access_token);
   req.db
     .query(
       "SELECT up.id, up.user_id,up.post_title,up.publish_time,up.published_by,up.liked_by,up.post_type,up.comments,up.posted_from,up.user_profile,up.email,u.profile_img as profile_image FROM user_posts as up LEFT JOIN Users u ON u.user_id=up.user_id ORDER BY up.id DESC LIMIT ?",
